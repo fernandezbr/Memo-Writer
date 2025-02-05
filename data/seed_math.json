@@ -1,0 +1,12 @@
+{
+    "RUNNING IN HOT WEATHER": {
+        "Context": "During hot weather, many people enjoy outdoor activities such as running. Running in hot weather can be challenging due to the high temperature and increased risk of dehydration. It is important to understand the effects of running in hot weather on the human body.",
+        "Question": "What are some potential risks of running in hot weather?",
+        "Answer": "Some potential risks of running in hot weather include dehydration, heat exhaustion, heat stroke, and increased risk of injury."
+    },
+      "BIRD MIGRATION": {
+        "Context": "Most migratory birds tend to gather in one area and migrate in large groups rather than individually. This behavior has evolved over time.",
+        "Question": "Which of the following best explains the evolution of this behavior in most migratory birds?\nA. Birds that migrated alone or in small groups were less likely to survive and reproduce.\nB. Birds that migrated alone or in small groups were more likely to find enough food.\nC. Flying in large groups allowed other bird species to join the migration.\nD. Flying in large groups gave each bird a better chance of finding a nesting site.",
+        "Answer": "A"
+    }
+}
