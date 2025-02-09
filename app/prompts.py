@@ -1,0 +1,36 @@
+import streamlit as st
+import app.utils as utils
+
+
+def extract_style(debug):
+    local = utils.read_json("data/local_data.json")
+
+    messages = [
+        {"role": "system", "content": local["llm_instructions"]},
+        {"role": "user", "content": local["training_content"]},
+        {"role": "assistant", "content": local["training_output"]},
+        {"role": "user", "content": st.session_state.example},
+    ]
+
+    if debug:
+        st.write(messages)
+    return utils.chat(messages, 0)
+
+
+def rewrite_content(debug):
+    system = [
+        "You are an expert writer assistant. Rewrite the user input based on the following writing style, writing guidelines and writing example.\n",
+        f"<writingStyle>{st.session_state.style}</writingStyle>\n",
+        f"<writingGuidelines>{st.session_state.guidelines}</writingGuidelines>\n",
+        f"<writingExample>{st.session_state.example}</writingExample>\n",
+        "Make sure to emulate the writing style, guidelines and example provided above.",
+    ]
+
+    messages = [
+        {"role": "system", "content": "\n".join(system)},
+        {"role": "user", "content": st.session_state.content},
+    ]
+
+    if debug:
+        st.write(messages)
+    return utils.chat(messages, 0.7)

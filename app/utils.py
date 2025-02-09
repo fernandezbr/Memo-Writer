@@ -63,6 +63,7 @@ def chat(
                 message_placeholder.markdown(full_response + "▌")
 
         message_placeholder.markdown(full_response)
+        return full_response
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
@@ -80,49 +81,53 @@ def read_json(file_path):
         return None
 
 
-# return matching seed data
-def get_seed(subject, seed):
-    # Specify the path to your JSON file
-    collection = read_json(f"data/seed_{subject}.json")
-
-    if seed in collection:
-        return collection[seed]
-    else:
-        return collection
+# get styles from database
+def get_styles():
+    return read_json("data/db_styles.json")
 
 
-# save data to database
-def save_data(subject):
-    data = read_json(f"data/db_{subject}.json")
+# save style to database
+def save_style():
+    data = read_json("data/db_styles.json")
     now = datetime.now()
 
     data.append(
         {
             "id": int(time.time() * 1000),
             "updatedAt": now.isoformat(),
-            "topic": st.session_state.topic,
-            "context": st.session_state.context,
-            "question": st.session_state.question,
-            "answer": st.session_state.answer,
+            "style": st.session_state.style,
+            "example": st.session_state.example,
         }
     )
 
-    with open(f"data/db_{subject}.json", "w") as file:
+    with open("data/db_styles.json", "w") as file:
         json.dump(data, file, indent=2)
 
 
-# get data from database
-def get_data(subject, topic):
-    dbdata = read_json(f"data/db_{subject}.json")
-    # Create DataFrame
-    df = pd.DataFrame(dbdata)
-    topics = df["topic"].tolist()
+# save output to database
+def save_output():
+    data = read_json("data/db_outputs.json")
+    now = datetime.now()
 
-    if topic:
-        # Filter DataFrame to get the object with matching topic
-        matching_topic = df[df["topic"] == topic]
-        # Convert the filtered DataFrame to a dictionary
-        result = matching_topic.to_dict(orient="records")
-        return result[0]
+    data.append(
+        {
+            "id": int(time.time() * 1000),
+            "updatedAt": now.isoformat(),
+            "content": st.session_state.content,
+            "style": st.session_state.style,
+            "output": st.session_state.output,
+        }
+    )
 
-    return topics
+    with open("data/db_outputs.json", "w") as file:
+        json.dump(data, file, indent=2)
+
+
+# get outputs from database
+def get_outputs():
+    # Convert to DataFrame and drop the 'id' column
+    dbdata = read_json("data/db_outputs.json")
+    df = pd.DataFrame(dbdata).drop(columns=["id"])
+
+    # Display the DataFrame in Streamlit
+    st.dataframe(df)
