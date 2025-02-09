@@ -7,6 +7,7 @@ import streamlit as st
 
 from datetime import datetime
 from openai import AzureOpenAI
+from azure.cosmos import CosmosClient, exceptions
 
 # create a config dictionary
 config = {
@@ -23,6 +24,16 @@ clientAOAI = AzureOpenAI(
     api_key=config["api_key"],
 )
 
+# Initialize Cosmos DB client
+cosmos_client = CosmosClient(
+    url=os.environ["AZURE_COSMOS_ENDPOINT"],
+    credential=os.environ["AZURE_COSMOS_KEY"]
+)
+
+# Get database and container references
+database = cosmos_client.get_database_client(os.environ["AZURE_COSMOS_DATABASE"])
+styles_container = database.get_container_client("styles")
+outputs_container = database.get_container_client("outputs")
 
 # log tracing
 def trace(col2, label, message):
@@ -83,51 +94,57 @@ def read_json(file_path):
 
 # get styles from database
 def get_styles():
-    return read_json("data/db_styles.json")
+    try:
+        items = list(styles_container.read_all_items())
+        return items
+    except exceptions.CosmosHttpResponseError as e:
+        st.error(f"An error occurred while fetching styles: {e}")
+        return []
 
 
 # save style to database
 def save_style():
-    data = read_json("data/db_styles.json")
-    now = datetime.now()
-
-    data.append(
-        {
-            "id": int(time.time() * 1000),
+    try:
+        now = datetime.now()
+        st.session_state.styleId = str(int(time.time() * 1000))
+        new_style = {
+            "id": st.session_state.styleId,
             "updatedAt": now.isoformat(),
+            "name": "",
             "style": st.session_state.style,
             "example": st.session_state.example,
         }
-    )
-
-    with open("data/db_styles.json", "w") as file:
-        json.dump(data, file, indent=2)
+        styles_container.create_item(body=new_style)
+    except exceptions.CosmosHttpResponseError as e:
+        st.error(f"An error occurred while saving style: {e}")
 
 
 # save output to database
 def save_output():
-    data = read_json("data/db_outputs.json")
-    now = datetime.now()
-
-    data.append(
-        {
-            "id": int(time.time() * 1000),
+    try:
+        now = datetime.now()
+        new_output = {
+            "id": str(int(time.time() * 1000)),
             "updatedAt": now.isoformat(),
             "content": st.session_state.contentAll,
-            "style": st.session_state.style,
+            "styleId": st.session_state.styleId,
             "output": st.session_state.output,
         }
-    )
-
-    with open("data/db_outputs.json", "w") as file:
-        json.dump(data, file, indent=2)
+        outputs_container.create_item(body=new_output)
+    except exceptions.CosmosHttpResponseError as e:
+        st.error(f"An error occurred while saving output: {e}")
 
 
 # get outputs from database
 def get_outputs():
-    # Convert to DataFrame and drop the 'id' column
-    dbdata = read_json("data/db_outputs.json")
-    df = pd.DataFrame(dbdata).drop(columns=["id"])
-
-    # Display the DataFrame in Streamlit
-    st.dataframe(df)
+    try:
+        items = list(outputs_container.read_all_items())
+        # Convert to DataFrame
+        df = pd.DataFrame(items)
+        # Only drop 'id' column if it exists
+        if 'id' in df.columns:
+            df = df.drop(columns=["id"])
+        # Display the DataFrame in Streamlit
+        st.dataframe(df)
+    except exceptions.CosmosHttpResponseError as e:
+        st.error(f"An error occurred while fetching outputs: {e}")

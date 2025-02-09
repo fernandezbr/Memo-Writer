@@ -3,12 +3,10 @@ import app.utils as utils
 
 
 def extract_style(debug):
-    local = utils.read_json("data/local_data.json")
-
     messages = [
-        {"role": "system", "content": local["llm_instructions"]},
-        {"role": "user", "content": local["training_content"]},
-        {"role": "assistant", "content": local["training_output"]},
+        {"role": "system", "content": st.session_state.locals["llm_instructions"]},
+        {"role": "user", "content": st.session_state.locals["training_content"]},
+        {"role": "assistant", "content": st.session_state.locals["training_output"]},
         {"role": "user", "content": st.session_state.example},
     ]
 

@@ -4,3 +4,4 @@ load_dotenv
 PyPDF2
 python-docx
 python-pptx
+azure-cosmos>=4.5.1
