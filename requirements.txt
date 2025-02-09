@@ -1,3 +1,6 @@
 streamlit
 openai
 load_dotenv
+PyPDF2
+python-docx
+python-pptx

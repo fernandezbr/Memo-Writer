@@ -113,7 +113,7 @@ def save_output():
         {
             "id": int(time.time() * 1000),
             "updatedAt": now.isoformat(),
-            "content": st.session_state.content,
+            "content": st.session_state.contentAll,
             "style": st.session_state.style,
             "output": st.session_state.output,
         }

@@ -17,12 +17,16 @@ def show_home():
     # Initial states
     if "content" not in st.session_state:
         st.session_state.content = ""
+    if "contentAll" not in st.session_state:
+        st.session_state.contentAll = ""
     if "style" not in st.session_state:
         st.session_state.style = ""
     if "guidelines" not in st.session_state:
         st.session_state.guidelines = ""
     if "example" not in st.session_state:
         st.session_state.example = ""
+    if "exampleText" not in st.session_state:
+        st.session_state.exampleText = ""
     if "output" not in st.session_state:
         st.session_state.output = ""
 

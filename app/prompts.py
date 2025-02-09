@@ -28,7 +28,7 @@ def rewrite_content(debug):
 
     messages = [
         {"role": "system", "content": "\n".join(system)},
-        {"role": "user", "content": st.session_state.content},
+        {"role": "user", "content": st.session_state.contentAll},
     ]
 
     if debug:
