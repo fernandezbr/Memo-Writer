@@ -39,18 +39,18 @@ def show_home():
             # padding-left: 1rem;
             # padding-right: 1rem;
         }
-        # .stAppDeployButton {
-        #     display: none;
-        # }
-        # .st-emotion-cache-15ecox0 {
-        #     display: none;
-        # }
-        # .viewerBadge_container__r5tak {
-        #     display: none;
-        # }
-        # .styles_viewerBadge__CvC9N {
-        #     display: none;
-        # }
+        .stAppDeployButton {
+            display: none;
+        }
+        .st-emotion-cache-15ecox0 {
+            display: none;
+        }
+        .viewerBadge_container__r5tak {
+            display: none;
+        }
+        .styles_viewerBadge__CvC9N {
+            display: none;
+        }
         </style>
         """,
         unsafe_allow_html=True,

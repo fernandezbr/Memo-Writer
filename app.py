@@ -101,5 +101,5 @@ if st.button(
 ):
     with st.container(border=True):
         with st.spinner("Processing..."):
-            st.session_state.output = prompts.rewrite_content(True)
+            st.session_state.output = prompts.rewrite_content(False)
             utils.save_output()

@@ -65,5 +65,5 @@ if st.button(
     with st.container(border=True):
         # Extract the writing style
         with st.spinner("Processing..."):
-            st.session_state.style = prompts.extract_style(True)
+            st.session_state.style = prompts.extract_style(False)
             utils.save_style()
