@@ -1,4 +1,5 @@
 import streamlit as st
+import app.utils as utils
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,18 +18,18 @@ def show_home():
     # Initial states
     if "content" not in st.session_state:
         st.session_state.content = ""
-    if "contentAll" not in st.session_state:
-        st.session_state.contentAll = ""
     if "style" not in st.session_state:
         st.session_state.style = ""
+    if "styleName" not in st.session_state:
+        st.session_state.styleName = ""
     if "guidelines" not in st.session_state:
         st.session_state.guidelines = ""
     if "example" not in st.session_state:
         st.session_state.example = ""
     if "exampleText" not in st.session_state:
         st.session_state.exampleText = ""
-    if "output" not in st.session_state:
-        st.session_state.output = ""
+    if "locals" not in st.session_state:
+        st.session_state.locals = utils.read_json("data/local_data.json")
 
     st.markdown(
         """
@@ -66,6 +67,6 @@ def show_sidebar():
             st.page_link("pages/outputs.py", label="Generated Outputs", icon="📚")
 
         st.image(
-            "https://github.com/robrita/Memo-Writer/blob/main/img/banner.png?raw=true",
+            "https://sa.kapamilya.com/absnews/abscbnnews/media/2020/business/11/19/20170731-bsp-md-2.jpg",
         )
         st.write("Powered by Azure OpenAI.")

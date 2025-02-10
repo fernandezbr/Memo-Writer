@@ -11,10 +11,6 @@ from io import BytesIO
 pages.show_home()
 pages.show_sidebar()
 
-# Initial states for local data
-if "locals" not in st.session_state:
-    st.session_state.locals = utils.read_json("data/local_data.json")
-
 # Home page
 st.title("✍️Style Writer")
 
@@ -56,50 +52,44 @@ if uploaded_files:
                             extracted_text += shape.text + "\n"
 
 # Combine text area and extracted content
-st.session_state.contentAll = st.session_state.content or extracted_text
-
-if extracted_text:
-    st.session_state.contentAll = st.session_state.content + "\n" + extracted_text
+content_all = st.session_state.content + "\n" + extracted_text
 
 with st.expander("Reference Style:"):
     # Extracting the styles and creating combined display options
     styles_data = utils.get_styles()
-    style_options = [f"{item['id']} - {item['name'] or item['style']}" for item in styles_data]
+    style_options = [item['name'] for item in styles_data]
     selected_style = st.selectbox("Select a Style:", options=style_options, index=None)
 
     # Assigning the selected style to the session state
     if selected_style:
-        # Extract the ID from the selected option
-        selected_id = selected_style.split("-")[0].strip()
-        st.session_state.styleId = selected_id
-        
         # Find the matching style data
         filtered = next(
-            (item for item in styles_data if str(item["id"]) == selected_id), None
+            (item for item in styles_data if str(item["name"]) == selected_style), None
         )
         
         if filtered:
             st.session_state.style = filtered["style"]
             st.session_state.example = filtered["example"]
+            st.session_state.styleId = selected_style
             
     st.session_state.style = st.text_area("✨Style", st.session_state.style)
-
-with st.expander("Reference Guidelines:"):
-    st.session_state.guidelines = st.text_area(
-        "✨Guidelines", st.session_state.locals["reference_guidelines"] or st.session_state.guidelines, 200
-    )
 
 with st.expander("Reference Examples:"):
     st.session_state.example = st.text_area("✨Examples", st.session_state.example, 200)
 
+with st.expander("Reference Guidelines:"):
+    st.session_state.guidelines = st.text_area(
+        "✨Guidelines", st.session_state.locals["relevant_guidelines"] or st.session_state.guidelines, 200
+    )
+
 if st.button(
     ":blue[Rewrite Content]",
     key="extract",
-    disabled=st.session_state.contentAll == ""
+    disabled=content_all == ""
     or st.session_state.style == ""
     or st.session_state.example == "",
 ):
     with st.container(border=True):
         with st.spinner("Processing..."):
-            st.session_state.output = prompts.rewrite_content(False)
-            utils.save_output()
+            output = prompts.rewrite_content(content_all, False)
+            utils.save_output(output, content_all)

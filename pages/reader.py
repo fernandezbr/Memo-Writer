@@ -23,7 +23,11 @@ uploaded_files = st.file_uploader(
     accept_multiple_files=True,
     help="Upload PDF, Word, or PowerPoint files"
 )
-    
+
+st.session_state.styleName = st.text_input(
+    "Style Name:", st.session_state.styleName, 100
+)
+
 # Extract text from uploaded files
 extracted_text = ""
 if uploaded_files:
@@ -52,18 +56,19 @@ if uploaded_files:
                             extracted_text += shape.text + "\n"
 
 # Combine text area and extracted content
-st.session_state.example = st.session_state.exampleText or extracted_text
-
-if extracted_text:
-    st.session_state.example = st.session_state.exampleText + "\n" + extracted_text
+combined_text = st.session_state.exampleText + "\n" + extracted_text
 
 if st.button(
     ":blue[Extract Writing Style]",
     key="extract",
-    disabled=st.session_state.example.strip() == "",
+    disabled=combined_text.strip() == "" or st.session_state.styleName == "",
 ):
     with st.container(border=True):
         # Extract the writing style
         with st.spinner("Processing..."):
-            st.session_state.style = prompts.extract_style(False)
-            utils.save_style()
+            # Check if style name already exists
+            if utils.check_style(st.session_state.styleName):
+                st.error(f"Style name '{st.session_state.styleName}' already exists. Please choose a different name.")
+            else:
+                style = prompts.extract_style(combined_text, True)
+                utils.save_style(style, combined_text)

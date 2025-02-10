@@ -2,12 +2,12 @@ import streamlit as st
 import app.utils as utils
 
 
-def extract_style(debug):
+def extract_style(combined_text, debug):
     messages = [
         {"role": "system", "content": st.session_state.locals["llm_instructions"]},
         {"role": "user", "content": st.session_state.locals["training_content"]},
         {"role": "assistant", "content": st.session_state.locals["training_output"]},
-        {"role": "user", "content": st.session_state.example},
+        {"role": "user", "content": combined_text},
     ]
 
     if debug:
@@ -15,7 +15,7 @@ def extract_style(debug):
     return utils.chat(messages, 0)
 
 
-def rewrite_content(debug):
+def rewrite_content(content_all, debug):
     system = [
         "You are an expert writer assistant. Rewrite the user input based on the following writing style, writing guidelines and writing example.\n",
         f"<writingStyle>{st.session_state.style}</writingStyle>\n",
@@ -26,7 +26,7 @@ def rewrite_content(debug):
 
     messages = [
         {"role": "system", "content": "\n".join(system)},
-        {"role": "user", "content": st.session_state.contentAll},
+        {"role": "user", "content": content_all},
     ]
 
     if debug:

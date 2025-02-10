@@ -8,6 +8,7 @@ import streamlit as st
 from datetime import datetime
 from openai import AzureOpenAI
 from azure.cosmos import CosmosClient, exceptions
+from azure.identity import DefaultAzureCredential
 
 # create a config dictionary
 config = {
@@ -24,10 +25,13 @@ clientAOAI = AzureOpenAI(
     api_key=config["api_key"],
 )
 
-# Initialize Cosmos DB client
+# Initialize Azure AD credential
+credential = DefaultAzureCredential()
+
+# Initialize Cosmos DB client with token credentials
 cosmos_client = CosmosClient(
     url=os.environ["AZURE_COSMOS_ENDPOINT"],
-    credential=os.environ["AZURE_COSMOS_KEY"]
+    credential=credential
 )
 
 # Get database and container references
@@ -102,17 +106,28 @@ def get_styles():
         return []
 
 
+# check if style name exists
+def check_style(style_name):
+    try:
+        query = f"SELECT * FROM c WHERE c.name = '{style_name}'"
+        items = list(styles_container.query_items(query=query, enable_cross_partition_query=True))
+        return len(items) > 0
+    except exceptions.CosmosHttpResponseError as e:
+        st.error(f"An error occurred while checking style name: {e}")
+        return False
+
+
 # save style to database
-def save_style():
+def save_style(style, combined_text):
     try:
         now = datetime.now()
         st.session_state.styleId = str(int(time.time() * 1000))
         new_style = {
             "id": st.session_state.styleId,
             "updatedAt": now.isoformat(),
-            "name": "",
-            "style": st.session_state.style,
-            "example": st.session_state.example,
+            "name": st.session_state.styleName,
+            "style": style,
+            "example": combined_text,
         }
         styles_container.create_item(body=new_style)
     except exceptions.CosmosHttpResponseError as e:
@@ -120,15 +135,15 @@ def save_style():
 
 
 # save output to database
-def save_output():
+def save_output(output, content_all):
     try:
         now = datetime.now()
         new_output = {
             "id": str(int(time.time() * 1000)),
             "updatedAt": now.isoformat(),
-            "content": st.session_state.contentAll,
+            "content": content_all,
             "styleId": st.session_state.styleId,
-            "output": st.session_state.output,
+            "output": output,
         }
         outputs_container.create_item(body=new_output)
     except exceptions.CosmosHttpResponseError as e:
@@ -138,9 +153,28 @@ def save_output():
 # get outputs from database
 def get_outputs():
     try:
-        items = list(outputs_container.read_all_items())
+        # Query to get all items ordered by updatedAt in descending order
+        query = "SELECT * FROM c ORDER BY c.updatedAt DESC"
+        items = list(outputs_container.query_items(
+            query=query,
+            enable_cross_partition_query=True
+        ))
+        
+        # Get all items beyond the first 50
+        items_to_delete = items[50:]
+        
+        # Delete older items
+        for item in items_to_delete:
+            outputs_container.delete_item(
+                item=item['id'], 
+                partition_key=item['id']
+            )
+        
+        # Keep only the latest 50 items
+        latest_items = items[:50]
+        
         # Convert to DataFrame
-        df = pd.DataFrame(items)
+        df = pd.DataFrame(latest_items)
         # Only drop 'id' column if it exists
         if 'id' in df.columns:
             df = df.drop(columns=["id"])
