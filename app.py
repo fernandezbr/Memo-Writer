@@ -1,6 +1,6 @@
 import streamlit as st
 import app.pages as pages
-# import app.utils as utils
+import app.utils as utils
 import app.prompts as prompts
 from PyPDF2 import PdfReader
 from docx import Document
@@ -55,8 +55,7 @@ if uploaded_files:
 content_all = st.session_state.content + "\n" + extracted_text.encode("ascii", errors="ignore").decode("ascii")
 
 # Extracting the styles and creating combined display options
-# styles_data = utils.get_styles()
-styles_data = []
+styles_data = utils.get_styles()
 style_options = [item['name'] for item in styles_data]
 selected_style = st.selectbox(":blue[**Select a Style:**]", options=style_options, index=None)
 
@@ -122,4 +121,4 @@ if st.button(
     with st.container(border=True):
         with st.spinner("Processing..."):
             output = prompts.rewrite_content(content_all, False)
-            # utils.save_output(output, content_all)
+            utils.save_output(output, content_all)
