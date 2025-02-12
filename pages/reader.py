@@ -70,5 +70,5 @@ if st.button(
             if utils.check_style(st.session_state.styleName):
                 st.error(f"Style name '{st.session_state.styleName}' already exists. Please choose a different name.")
             else:
-                style = prompts.extract_style(combined_text, True)
+                style = prompts.extract_style(combined_text, False)
                 utils.save_style(style, combined_text)

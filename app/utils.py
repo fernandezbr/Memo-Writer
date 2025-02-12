@@ -7,7 +7,7 @@ import streamlit as st
 
 from datetime import datetime
 from openai import AzureOpenAI
-from azure.cosmos import CosmosClient, exceptions
+from azure.cosmos import CosmosClient, exceptions, PartitionKey
 # from azure.identity import DefaultAzureCredential
 
 # create a config dictionary
@@ -28,6 +28,35 @@ clientAOAI = AzureOpenAI(
 # Initialize Azure AD credential
 # credential = DefaultAzureCredential()
 
+def ensure_containers_exist():
+    try:
+        # Define container configurations
+        containers_config = [
+            {
+                "name": "styles",
+                "partition_key": PartitionKey(path="/user_id"),
+                "unique_keys": [{"paths": ["/name"]}]
+            },
+            {
+                "name": "outputs",
+                "partition_key": PartitionKey(path="/user_id")
+            }
+        ]
+        
+        for config in containers_config:
+            try:
+                # Try to read the container to check if it exists
+                database.get_container_client(config["name"])
+            except exceptions.CosmosResourceNotFoundError:
+                # Container doesn't exist, create it
+                database.create_container(
+                    id=config["name"],
+                    partition_key=config["partition_key"],
+                    unique_keys=config.get("unique_keys", [])
+                )
+    except Exception as e:
+        st.error(f"Error ensuring containers exist: {e}")
+
 # Initialize Cosmos DB client with token credentials
 cosmos_client = CosmosClient(
     url=os.environ["AZURE_COSMOS_ENDPOINT"],
@@ -37,6 +66,11 @@ cosmos_client = CosmosClient(
 
 # Get database and container references
 database = cosmos_client.get_database_client(os.environ["AZURE_COSMOS_DATABASE"])
+
+# Ensure containers exist with proper configuration
+ensure_containers_exist()
+
+# Get container references after ensuring they exist
 styles_container = database.get_container_client("styles")
 outputs_container = database.get_container_client("outputs")
 
@@ -100,7 +134,22 @@ def read_json(file_path):
 # get styles from database
 def get_styles():
     try:
-        items = list(styles_container.read_all_items())
+        # Get current user info from Streamlit context
+        headers = st.context.headers
+        user_id = headers.get('X-MS-CLIENT-PRINCIPAL-ID', '12345')
+        
+        if not user_id:
+            st.warning("User not authenticated")
+            return []
+            
+        # Query items for the current user
+        query = "SELECT * FROM c WHERE c.user_id = @user_id"
+        parameters = [{"name": "@user_id", "value": user_id}]
+        items = list(styles_container.query_items(
+            query=query,
+            parameters=parameters,
+            enable_cross_partition_query=True
+        ))
         return items
     except exceptions.CosmosHttpResponseError as e:
         st.error(f"An error occurred while fetching styles: {e}")
@@ -110,8 +159,23 @@ def get_styles():
 # check if style name exists
 def check_style(style_name):
     try:
-        query = f"SELECT * FROM c WHERE c.name = '{style_name}'"
-        items = list(styles_container.query_items(query=query, enable_cross_partition_query=True))
+        # Get current user info
+        headers = st.context.headers
+        user_id = headers.get('X-MS-CLIENT-PRINCIPAL-ID', '12345')
+        
+        if not user_id:
+            return False
+            
+        query = "SELECT * FROM c WHERE c.name = @style_name AND c.user_id = @user_id"
+        parameters = [
+            {"name": "@style_name", "value": style_name},
+            {"name": "@user_id", "value": user_id}
+        ]
+        items = list(styles_container.query_items(
+            query=query,
+            parameters=parameters,
+            enable_cross_partition_query=True
+        ))
         return len(items) > 0
     except exceptions.CosmosHttpResponseError as e:
         st.error(f"An error occurred while checking style name: {e}")
@@ -121,6 +185,11 @@ def check_style(style_name):
 # save style to database
 def save_style(style, combined_text):
     try:
+        # Get current user info
+        headers = st.context.headers
+        user_id = headers.get('X-MS-CLIENT-PRINCIPAL-ID', '12345')
+        user_name = headers.get('X-MS-CLIENT-PRINCIPAL-NAME', 'r0bai')
+        
         now = datetime.now()
         st.session_state.styleId = str(int(time.time() * 1000))
         new_style = {
@@ -129,6 +198,8 @@ def save_style(style, combined_text):
             "name": st.session_state.styleName,
             "style": style,
             "example": combined_text,
+            "user_id": user_id,
+            "user_name": user_name
         }
         styles_container.create_item(body=new_style)
     except exceptions.CosmosHttpResponseError as e:
@@ -138,6 +209,11 @@ def save_style(style, combined_text):
 # save output to database
 def save_output(output, content_all):
     try:
+        # Get current user info
+        headers = st.context.headers
+        user_id = headers.get('X-MS-CLIENT-PRINCIPAL-ID', '12345')
+        user_name = headers.get('X-MS-CLIENT-PRINCIPAL-NAME', 'r0bai')
+        
         now = datetime.now()
         new_output = {
             "id": str(int(time.time() * 1000)),
@@ -145,6 +221,8 @@ def save_output(output, content_all):
             "content": content_all,
             "styleId": st.session_state.styleId,
             "output": output,
+            "user_id": user_id,
+            "user_name": user_name
         }
         outputs_container.create_item(body=new_output)
     except exceptions.CosmosHttpResponseError as e:
@@ -154,25 +232,32 @@ def save_output(output, content_all):
 # get outputs from database
 def get_outputs():
     try:
-        # Query to get all items ordered by updatedAt in descending order
-        query = "SELECT * FROM c ORDER BY c.updatedAt DESC"
+        # Get current user info
+        headers = st.context.headers
+        user_id = headers.get('X-MS-CLIENT-PRINCIPAL-ID', '12345')
+        
+        if not user_id:
+            st.warning("User not authenticated")
+            return
+            
+        # Query to get all items for current user ordered by updatedAt
+        query = "SELECT * FROM c WHERE c.user_id = @user_id ORDER BY c.updatedAt DESC"
+        parameters = [{"name": "@user_id", "value": user_id}]
         items = list(outputs_container.query_items(
             query=query,
+            parameters=parameters,
             enable_cross_partition_query=True
         ))
         
-        # Get all items beyond the first 50
+        # Keep only the latest 50 items
         items_to_delete = items[50:]
+        latest_items = items[:50]
         
         # Delete older items
         for item in items_to_delete:
             outputs_container.delete_item(
-                item=item['id'], 
-                partition_key=item['style']
+                item=item['id']
             )
-        
-        # Keep only the latest 50 items
-        latest_items = items[:50]
         
         # Convert to DataFrame
         df = pd.DataFrame(latest_items)
