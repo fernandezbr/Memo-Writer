@@ -167,7 +167,7 @@ def get_outputs():
         for item in items_to_delete:
             outputs_container.delete_item(
                 item=item['id'], 
-                partition_key=item['id']
+                partition_key=item['style']
             )
         
         # Keep only the latest 50 items

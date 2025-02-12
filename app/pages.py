@@ -65,6 +65,7 @@ def show_sidebar():
             st.page_link("app.py", label="Style Writer", icon="✍️")
             st.page_link("pages/reader.py", label="Style Reader", icon="✨")
             st.page_link("pages/outputs.py", label="Generated Outputs", icon="📚")
+            st.page_link("pages/settings.py", label="Settings", icon="⚙️")
 
         st.image(
             "https://sa.kapamilya.com/absnews/abscbnnews/media/2020/business/11/19/20170731-bsp-md-2.jpg",

@@ -9,4 +9,5 @@ pages.show_sidebar()
 st.title("📚Generated Outputs")
 
 # Display the generated outputs
-utils.get_outputs()
+with st.spinner("Processing..."):
+    utils.get_outputs()

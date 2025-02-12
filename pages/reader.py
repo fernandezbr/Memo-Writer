@@ -56,7 +56,7 @@ if uploaded_files:
                             extracted_text += shape.text + "\n"
 
 # Combine text area and extracted content
-combined_text = st.session_state.exampleText + "\n" + extracted_text
+combined_text = st.session_state.exampleText + "\n" + extracted_text.encode("ascii", errors="ignore").decode("ascii")
 
 if st.button(
     ":blue[Extract Writing Style]",

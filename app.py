@@ -52,35 +52,63 @@ if uploaded_files:
                             extracted_text += shape.text + "\n"
 
 # Combine text area and extracted content
-content_all = st.session_state.content + "\n" + extracted_text
+content_all = st.session_state.content + "\n" + extracted_text.encode("ascii", errors="ignore").decode("ascii")
 
-with st.expander("Reference Style:"):
-    # Extracting the styles and creating combined display options
-    styles_data = utils.get_styles()
-    style_options = [item['name'] for item in styles_data]
-    selected_style = st.selectbox("Select a Style:", options=style_options, index=None)
+# Extracting the styles and creating combined display options
+styles_data = utils.get_styles()
+style_options = [item['name'] for item in styles_data]
+selected_style = st.selectbox("Select a Style:", options=style_options, index=None)
 
-    # Assigning the selected style to the session state
-    if selected_style:
-        # Find the matching style data
-        filtered = next(
-            (item for item in styles_data if str(item["name"]) == selected_style), None
-        )
-        
-        if filtered:
-            st.session_state.style = filtered["style"]
-            st.session_state.example = filtered["example"]
-            st.session_state.styleId = selected_style
-            
-    st.session_state.style = st.text_area("✨Style", st.session_state.style)
-
-with st.expander("Reference Examples:"):
-    st.session_state.example = st.text_area("✨Examples", st.session_state.example, 200)
-
-with st.expander("Reference Guidelines:"):
-    st.session_state.guidelines = st.text_area(
-        "✨Guidelines", st.session_state.locals["relevant_guidelines"] or st.session_state.guidelines, 200
+# Assigning the selected style to the session state
+if selected_style:
+    # Find the matching style data
+    filtered = next(
+        (item for item in styles_data if str(item["name"]) == selected_style), None
     )
+    
+    if filtered:
+        st.session_state.style = filtered["style"]
+        st.session_state.example = filtered["example"]
+        st.session_state.styleId = selected_style
+        
+st.session_state.style = st.text_area("✨Style", st.session_state.style)
+
+# Show the example style
+guidelines = st.session_state.locals.get("relevant_guidelines", {})
+selected_guidelines = []
+
+st.text("Editorial Style Guide (Select only the appropriate guidelines):")
+
+# Create a checkbox for each guideline section
+if guidelines:
+    # Create two columns
+    col1, col2 = st.columns(2)
+    
+    # Split guidelines into two halves
+    guideline_items = list(guidelines.items())
+    mid_point = len(guideline_items) // 2
+    
+    # First column
+    with col1:
+        for section_name, content in guideline_items[:mid_point]:
+            default = section_name in ["COMMON GRAMMATICAL ERRORS", "WRITING LETTERS"]
+            if st.checkbox(section_name, value=default, key=f"col1_{section_name}"):
+                selected_guidelines.append(content)
+    
+    # Second column
+    with col2:
+        for section_name, content in guideline_items[mid_point:]:
+            default = section_name in ["COMMON GRAMMATICAL ERRORS", "WRITING LETTERS"]
+            if st.checkbox(section_name, value=default, key=f"col2_{section_name}"):
+                selected_guidelines.append(content)
+else:
+    st.warning("No guidelines available in the local data.")
+
+# Join all selected guidelines with newlines and store in session state
+st.session_state.guidelines = "\n".join(selected_guidelines)
+
+# Show the combined guidelines in a text area
+st.text_area("✨Relevant Guidelines", st.session_state.guidelines, height=200)
 
 if st.button(
     ":blue[Rewrite Content]",
