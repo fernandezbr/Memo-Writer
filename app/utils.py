@@ -8,7 +8,7 @@ import streamlit as st
 from datetime import datetime
 from openai import AzureOpenAI
 from azure.cosmos import CosmosClient, exceptions
-from azure.identity import DefaultAzureCredential
+# from azure.identity import DefaultAzureCredential
 
 # create a config dictionary
 config = {
@@ -26,12 +26,12 @@ clientAOAI = AzureOpenAI(
 )
 
 # Initialize Azure AD credential
-credential = DefaultAzureCredential()
+# credential = DefaultAzureCredential()
 
 # Initialize Cosmos DB client with token credentials
 cosmos_client = CosmosClient(
     url=os.environ["AZURE_COSMOS_ENDPOINT"],
-    credential=credential
+    credential=os.environ["AZURE_COSMOS_KEY"]
 )
 
 # Get database and container references
