@@ -6,7 +6,7 @@ import app.utils as utils
 pages.show_home()
 pages.show_sidebar()
 
-st.title("📚Generated Outputs")
+st.header("📰Generated Outputs")
 
 # Display the generated outputs
 with st.spinner("Processing..."):

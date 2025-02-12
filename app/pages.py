@@ -35,7 +35,7 @@ def show_home():
         """
         <style>
         .block-container {
-            padding-top: 1rem;
+            padding-top: 1.5rem;
             # padding-bottom: 1rem;
             # padding-left: 1rem;
             # padding-right: 1rem;
@@ -62,9 +62,9 @@ def show_home():
 def show_sidebar():
     with st.sidebar:
         with st.container(border=True):
-            st.page_link("app.py", label="Style Writer", icon="✍️")
-            st.page_link("pages/reader.py", label="Style Reader", icon="✨")
-            st.page_link("pages/outputs.py", label="Generated Outputs", icon="📚")
+            st.page_link("app.py", label="Style Writer", icon="📝")
+            st.page_link("pages/reader.py", label="Style Reader", icon="🔍")
+            st.page_link("pages/outputs.py", label="Generated Outputs", icon="📰")
             st.page_link("pages/settings.py", label="Settings", icon="⚙️")
 
         st.image(

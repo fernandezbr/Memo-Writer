@@ -11,21 +11,21 @@ from io import BytesIO
 pages.show_home()
 pages.show_sidebar()
 
-st.title("✨Style Reader")
+st.header("🔍Style Reader")
 
 st.session_state.exampleText = st.text_area(
-    "Reference Example:", st.session_state.exampleText, 200
+    ":blue[**Reference Example:**]", st.session_state.exampleText, 200
 )
 
 uploaded_files = st.file_uploader(
-    "Upload Example Files:", 
+    ":blue[**Upload Example Files:**]", 
     type=["pdf", "docx", "pptx"], 
     accept_multiple_files=True,
     help="Upload PDF, Word, or PowerPoint files"
 )
 
 st.session_state.styleName = st.text_input(
-    "Style Name:", st.session_state.styleName, 100
+    ":blue[**Style Name:**]", st.session_state.styleName, 100
 )
 
 # Extract text from uploaded files
@@ -59,7 +59,7 @@ if uploaded_files:
 combined_text = st.session_state.exampleText + "\n" + extracted_text.encode("ascii", errors="ignore").decode("ascii")
 
 if st.button(
-    ":blue[Extract Writing Style]",
+    ":blue[**Extract Writing Style**]",
     key="extract",
     disabled=combined_text.strip() == "" or st.session_state.styleName == "",
 ):
