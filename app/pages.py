@@ -35,7 +35,7 @@ def show_home():
         """
         <style>
         .block-container {
-            padding-top: 1.5rem;
+            padding-top: 3rem;
             # padding-bottom: 1rem;
             # padding-left: 1rem;
             # padding-right: 1rem;
