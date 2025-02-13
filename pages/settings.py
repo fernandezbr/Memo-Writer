@@ -8,22 +8,22 @@ pages.show_sidebar()
 
 st.header("⚙️Settings")
 # Display Azure authentication information
-st.subheader("👤 User Information")
+st.write(":blue[👤 **User Information**]")
+
 with st.expander("Authentication Details"):
     # Get request headers using Streamlit's context
     headers = st.context.headers
     
     if headers:
         # Display user information
-        st.write("**User Details:**")
         user_name = headers.get('X-MS-CLIENT-PRINCIPAL-NAME', 'Not available')
         user_id = headers.get('X-MS-CLIENT-PRINCIPAL-ID', 'Not available')
-        st.write(f"- User Name: {user_name}")
-        st.write(f"- User ID: {user_id}")
+        st.write(f"User Name: {user_name}")
+        st.write(f"User ID: {user_id}")
         
         # Display all headers
-        st.write("**All Request Headers:**")
-        st.write(headers)
+        # st.write("**All Request Headers:**")
+        # st.write(headers)
     else:
         st.warning("No authentication headers found. Make sure you're running this app in Azure App Service with authentication enabled.")
 

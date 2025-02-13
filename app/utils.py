@@ -259,11 +259,9 @@ def get_outputs():
                 item=item['id']
             )
         
-        # Convert to DataFrame
+        # Convert to DataFrame and select only specific columns
         df = pd.DataFrame(latest_items)
-        # Only drop 'id' column if it exists
-        if 'id' in df.columns:
-            df = df.drop(columns=["id"])
+        df = df[['updatedAt', 'styleId', 'content', 'output']]
         # Display the DataFrame in Streamlit
         st.dataframe(df)
     except exceptions.CosmosHttpResponseError as e:
